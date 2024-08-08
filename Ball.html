@@ -1,0 +1,872 @@
+<html><head><base href="https://example.com"><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Adentrix Balls</title><meta name="google-adsense-account" content="ca-pub-2888571345676229"><script async="" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2888571345676229" crossorigin="anonymous"></script>
+<style>
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+    }
+    #backgroundFrame {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+        z-index: -1;
+    }
+    #gameContainer {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    canvas {
+        border: 1px solid #000;
+        background-size: cover;
+        background-position: center;
+        max-width: 100%;
+        max-height: 100%;
+    }
+    #counter {
+        position: absolute;
+        top: 70px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: green;
+        font-size: 24px;
+        font-family: Arial, sans-serif;
+    }
+    #counter img {
+        position: relative;
+        top: 5px;
+        margin-right: 5px;
+    }
+    #debugButton {
+        position: absolute;
+        top: 110px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 10px 20px;
+        background-color: orange;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+    #startMenu {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        color: white;
+        font-size: 24px;
+        text-align: center;
+        opacity: 1;
+        transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+    }
+    #startMenu.hidden {
+        opacity: 0;
+        transform: scale(1.1);
+        pointer-events: none;
+    }
+    #gameOverlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: black;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+        pointer-events: none;
+    }
+    #donateButton {
+        position: relative;
+        margin-top: 20px;
+        padding: 15px 30px;
+        background-color: #FF69B4;
+        color: white;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 24px;
+        font-weight: bold;
+        text-transform: uppercase;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    #donateButton:hover {
+        background-color: #FF1493;
+        transform: scale(1.05);
+        box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+    }
+    #donateButton:active {
+        transform: scale(0.95);
+    }
+    #donateButton img {
+        width: 30px;
+        height: auto;
+        margin-right: 10px;
+        vertical-align: middle;
+    }
+    #donationOptions {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 30px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        z-index: 1000;
+    }
+    .donationButton {
+        display: block;
+        width: 80%;
+        margin: 20px auto;
+        padding: 15px;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 18px;
+        font-weight: bold;
+        color: white;
+    }
+    .donationButton:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+    }
+    .donationButton:active {
+        transform: scale(0.95);
+    }
+    .donationButton img {
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+        margin-bottom: 10px;
+    }
+    #paypalButton {
+        background-color: #0070BA;
+    }
+    #patreonButton {
+        background-color: #FF424D;
+    }
+    #closeButton {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 24px;
+        color: #333;
+        cursor: pointer;
+        background: none;
+        border: none;
+        padding: 5px;
+    }
+    #closeButton:hover {
+        color: #FF1493;
+    }
+    #chooseMethodText {
+        font-size: 28px;
+        color: #333;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+    }
+    #sunGif {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 100px;
+        height: 100px;
+        z-index: 1;
+    }
+    #websimLink {
+        color: #FF69B4;
+        text-decoration: none;
+        font-weight: bold;
+        transition: color 0.3s ease;
+    }
+    #websimLink:hover {
+        color: #FF1493;
+    }
+    #donateText {
+        margin-top: 10px;
+        font-size: 16px;
+        color: white;
+    }
+    @keyframes victoryAnimation {
+        0% { transform: scale(0.5); opacity: 0; }
+        50% { transform: scale(1.2); opacity: 1; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    .victoryMessage {
+        animation: victoryAnimation 1s ease-out;
+    }
+    #donateSubtext {
+        margin-top: 5px;
+        font-size: 14px;
+        color: white;
+    }
+    @keyframes fadeInRotate {
+        from { opacity: 0; transform: rotate(-360deg) scale(0.5); }
+        to { opacity: 1; transform: rotate(0) scale(1); }
+    }
+    #gameCanvas {
+        animation: fadeInRotate 2s ease-in-out;
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    #clickToStart {
+        animation: pulse 2s infinite;
+    }
+</style>
+</head>
+<body>
+    <iframe id="backgroundFrame" src="https://adentrix.in/fondo" frameborder="0"></iframe>
+    <div id="gameContainer">
+        <div id="startMenu">
+            <h1>Juego hecho con GPT4 y Sonnet</h1>
+            <p id="clickToStart">Haz click para empezar</p>
+            <p>Y hecho en <a id="websimLink" href="https://websim.ai" target="_blank">websim.ai</a> con Inteligencia artificial</p>
+            <button id="donateButton">
+                <img src="https://blog.podcast.co/images/accept-donations-on-your-podcast-patreon-paypal-buttons.png" alt="Donate">
+                <span id="donateText">Donar</span>
+            </button>
+            <p id="donateSubtext">para renovar esta página web en 2028 y para más trabajo</p>
+        </div>
+        <div id="gameOverlay"></div>
+        <div id="counter">
+            <img src="https://static.vecteezy.com/system/resources/previews/013/743/843/original/red-heart-pixel-art-png.png" width="30" height="30" alt="Corazón pixel art">
+            <span id="shots-text"></span>
+        </div>
+        <button id="debugButton">Debug Mode</button>
+        <canvas id="gameCanvas" width="800" height="600" style="border-radius: 15px;"></canvas>
+        <img id="sunGif" src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbjY0ZW11M2Ntd3YwcTA0d3J3NHhrMDNqeTRtM2Fjb3g3dDQ2YXA0ZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/eGmgF0V90QIgpMv4WQ/giphy.webp" alt="Sol animado">
+        <audio id="backgroundMusic" loop="">
+            <source src="https://drive.google.com/uc?export=download&amp;id=1R0V4nBEtQMHfqToE-Dej12yL3HeTMSm1" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+        <div id="donationOptions">
+            <button id="closeButton">×</button>
+            <h2 id="chooseMethodText">Elige un método de donación</h2>
+            <a href="https://streamlabs.com/adentrix9419/tip" target="_blank" class="donationButton" id="paypalButton">
+                <img src="https://streamersquare.com/wp-content/uploads/2016/05/Paypal.png" alt="PayPal">
+                <span id="paypalText">Donación con PayPal</span>
+            </a>
+            <a href="https://patreon.com/Adentrix" target="_blank" class="donationButton" id="patreonButton">
+                <img src="https://i0.wp.com/whatshernamepodcast.com/wp-content/uploads/2018/08/patreon-button-e1534177659186.png?fit=331%2C160&amp;ssl=1" alt="Patreon">
+                <span id="patreonText">Suscripción en Patreon</span>
+            </a>
+        </div>
+    </div>
+    <script>
+        // Módulo de configuración del juego
+        const gameConfig = {
+            canvas: document.getElementById("gameCanvas"),
+            ctx: null,
+            startMenu: document.getElementById("startMenu"),
+            gameOverlay: document.getElementById("gameOverlay"),
+            gameStarted: false,
+            maxPullDistance: 100,
+            maxShots: 5,
+            shotsLeft: 5,
+            isFlying: false,
+            isDragging: false,
+            gameWon: false,
+            gameLost: false,
+            enemyCount: 3,
+            level: 1,
+            isBossLevel: false,
+            bossHits: 0,
+            bossHitsToWin: 3,
+            enemies: [],
+            particles: []
+        };
+
+        // Módulo de imágenes
+        const gameImages = {
+            bird: new Image(),
+            enemy: new Image(),
+            boss: new Image(),
+            specialBoss: new Image(),
+            triangle: new Image(),
+            loadImages: function() {
+                this.bird.src = 'https://community.gamedev.tv/uploads/db2322/original/3X/7/b/7b01931d54bb922e218fec025ae5ef0ccd211414.png';
+                this.enemy.src = 'https://images.freeimages.com/vhq/images/previews/efa/cubikopp-smilies-145979.png?fmt=webp&w=500';
+                this.boss.src = 'https://static.vecteezy.com/system/resources/previews/028/651/778/original/pixel-art-cartoon-funny-skull-head-icon-png.png';
+                this.specialBoss.src = 'https://tr.rbxcdn.com/ebce3a4fadedac339dc1a30008d402b1/420/420/Image/Png';
+                this.triangle.src = 'https://art.pixilart.com/thumb/d050df9bee448db.png';
+            }
+        };
+
+        // Módulo de objetos del juego
+        const gameObjects = {
+            bird: {
+                baseX: 100, baseY: 300, x: 100, y: 300, radius: 25,
+                vx: 0, vy: 0, ax: 0, ay: 0.3, visible: true, angle: 0
+            },
+            sling: { baseX: 100, baseY: 300, dragging: false, visible: true },
+            ground: { x: 0, y: 500, width: gameConfig.canvas.width, height: 100 }
+        };
+
+        // Módulo de funciones del juego
+        const gameFunctions = {
+            startGame: function() {
+                gameConfig.startMenu.classList.add("hidden");
+                gameConfig.gameOverlay.style.opacity = "1";
+                setTimeout(() => {
+                    gameConfig.gameOverlay.style.opacity = "0";
+                    gameConfig.gameStarted = true;
+                    document.getElementById("backgroundMusic").play();
+                }, 500);
+            },
+
+            setBackground: function() {
+                const gifBackground = 'https://cdnb.artstation.com/p/assets/images/images/067/315/653/original/federico-catala-errozarena-barcox2.gif?1695080533';
+                const normalBackground = 'https://media.istockphoto.com/id/1333010525/es/vector/ilustraci%C3%B3n-simple-de-pixel-art-plano-de-fondo-de-paisaje-al-aire-libre-de-dibujos-animados.jpg?s=612x612&w=0&k=20&c=vTVAVSCa_hAV8k0CIy3T5z27FtvL-RRA4DW1Sw1ARxA=';
+                const specialBackground = 'https://cdn.dribbble.com/users/910651/screenshots/3420565/ancient-aliens_dribbble.gif';
+
+                if (gameConfig.level === 16) {
+                    gameConfig.canvas.style.backgroundImage = `url("${specialBackground}")`;
+                } else if (gameConfig.isBossLevel) {
+                    gameConfig.canvas.style.backgroundImage = `url("${gifBackground}")`;
+                } else {
+                    gameConfig.canvas.style.backgroundImage = `url("${normalBackground}")`;
+                }
+
+                // Mostrar u ocultar el sol GIF según el nivel
+                const sunGif = document.getElementById('sunGif');
+                if (gameConfig.level === 1) {
+                    sunGif.style.display = 'block';
+                } else {
+                    sunGif.style.display = 'none';
+                }
+            },
+
+            generateEnemies: function(count) {
+                gameConfig.enemies.length = 0;
+                for (let i = 0; i < count; i++) {
+                    let enemySpeed = 2;
+                    let diagonalMovement = gameConfig.level > 5;
+                    let directionX = Math.random() < 0.5 ? -1 : 1;
+                    let directionY = Math.random() < 0.5 ? -1 : 1;
+                    gameConfig.enemies.push({
+                        x: 500 + i * 50,
+                        y: 470 - Math.random() * 200,
+                        width: 40,
+                        height: 40,
+                        moving: gameConfig.level > 2,
+                        directionX,
+                        directionY,
+                        speed: Math.random() * 2 + 1,
+                        diagonal: diagonalMovement,
+                        hit: false,
+                        angle: 0,
+                        scale: 1,
+                        vx: 0,
+                        vy: 0,
+                        groundTime: 0,
+                        deleteTimer: 0
+                    });
+                }
+            },
+
+            generateBossLevel: function() {
+                gameConfig.enemies.length = 0;
+                for (let i = 0; i < 3; i++) {
+                    let enemySpeed = 2;
+                    let diagonalMovement = gameConfig.level > 8;
+                    let directionX = Math.random() < 0.5 ? -1 : 1;
+                    let directionY = Math.random() < 0.5 ? -1 : 1;
+
+                    gameConfig.enemies.push({
+                        x: 400 + i * 50,
+                        y: 470 - Math.random() * 200,
+                        width: 40,
+                        height: 40,
+                        moving: true,
+                        directionX,
+                        directionY,
+                        speed: enemySpeed,
+                        diagonal: diagonalMovement,
+                        hit: false,
+                        angle: 0,
+                        scale: 1,
+                        vx: 0,
+                        vy: 0,
+                        groundTime: 0,
+                        deleteTimer: 0
+                    });
+                }
+                gameConfig.enemies.push({
+                    x: gameConfig.canvas.width - 200,
+                    y: gameObjects.ground.y - 200,
+                    width: 150,
+                    height: 150,
+                    isBoss: true,
+                    hits: 0,
+                    directionX: 1,
+                    directionY: 1,
+                    speed: 1.5,
+                    trembleStart: 0,
+                    isTrembling: false,
+                    diagonal: false,
+                    hit: false,
+                    angle: 0,
+                    scale: 1,
+                    vx: 0,
+                    vy: 0,
+                    groundTime: 0,
+                    deleteTimer: 0,
+                    moving: true
+                });
+            },
+
+            resetGame: function() {
+                if (gameConfig.gameWon) {
+                    this.incrementLevel();
+                } else {
+                    gameConfig.level = 1;
+                    gameConfig.enemyCount = 3;
+                    gameConfig.isBossLevel = false;
+                }
+                gameConfig.shotsLeft = gameConfig.maxShots;
+                this.generateEnemies(gameConfig.enemyCount);
+                this.resetBird();
+                gameConfig.gameWon = false;
+                gameConfig.gameLost = false;
+                this.setBackground();
+                this.updateCounter();
+            },
+
+            passLevelManually: function() {
+                gameConfig.level++;
+                this.handleLevelChange();
+                gameConfig.shotsLeft = gameConfig.maxShots;
+                this.resetBird();
+                this.updateCounter();
+                this.setBackground();
+            },
+
+            incrementLevel: function() {
+                gameConfig.level++;
+                this.handleLevelChange();
+                gameConfig.shotsLeft = gameConfig.maxShots;
+                this.resetBird();
+                this.generateEnemies(gameConfig.enemyCount);
+                this.updateCounter();
+                this.setBackground();
+            },
+
+            handleLevelChange: function() {
+                gameConfig.isBossLevel = gameConfig.level % 8 === 0;
+                if (gameConfig.isBossLevel) {
+                    gameConfig.bossHits = 0;
+                    this.generateBossLevel();
+                } else {
+                    this.generateEnemies(gameConfig.enemyCount);
+                    if (gameConfig.enemyCount < 6) gameConfig.enemyCount++;
+                }
+            },
+
+            distance: function(x1, y1, x2, y2) { 
+                return Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2); 
+            },
+
+            collisionDetected: function(bird, enemy) { 
+                return bird.x + bird.radius > enemy.x && bird.x - bird.radius < enemy.x + enemy.width && 
+                       bird.y + bird.radius > enemy.y && bird.y - bird.radius < enemy.y + enemy.height; 
+            },
+
+            resetBird: function() {
+                gameObjects.bird.x = gameObjects.bird.baseX;
+                gameObjects.bird.y = gameObjects.bird.baseY;
+                gameObjects.bird.vx = 0;
+                gameObjects.bird.vy = 0;
+                gameObjects.bird.angle = 0;
+                gameConfig.isFlying = false;
+                gameObjects.bird.visible = true;
+            },
+
+            checkVictory: function() { 
+                if (gameConfig.isBossLevel && gameConfig.enemies[gameConfig.enemies.length - 1].hits >= gameConfig.bossHitsToWin) gameConfig.gameWon = true; 
+                else if (gameConfig.enemies.length === 0) gameConfig.gameWon = true; 
+            },
+
+            checkDefeat: function() { 
+                if (gameConfig.shotsLeft <= 0 && !gameConfig.isFlying && gameConfig.enemies.length > 0) gameConfig.gameLost = true; 
+            },
+
+            updateCounter: function() { 
+                document.getElementById("shots-text").textContent = ` X ${gameConfig.shotsLeft} | NIVEL ${gameConfig.level}`; 
+            },
+
+            createParticle: function(x, y) {
+                gameConfig.particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2,
+                    radius: Math.random() * 3 + 1,
+                    life: 60,
+                    color: `rgb(255, ${Math.floor(Math.random() * 165)}, 0)`
+                });
+            }
+        };
+
+        // Módulo de eventos del juego
+        const gameEvents = {
+            onStartDragging: function(offsetX, offsetY) {
+                if (!gameConfig.gameStarted) return;
+                if (gameConfig.shotsLeft <= 0 && !gameConfig.isFlying) return;
+                if (gameFunctions.distance(offsetX, offsetY, gameObjects.bird.x, gameObjects.bird.y) < gameObjects.bird.radius) {
+                    gameConfig.isDragging = true;
+                    gameObjects.sling.dragging = true;
+                    gameObjects.sling.visible = true;
+                }
+            },
+
+            onDragging: function(offsetX, offsetY) {
+                if (!gameConfig.gameStarted) return;
+                if (gameConfig.isDragging && gameObjects.sling.dragging) {
+                    const dx = offsetX - gameObjects.sling.baseX;
+                    const dy = offsetY - gameObjects.sling.baseY;
+                    const angle = Math.atan2(dy, dx);
+                    const dist = Math.min(gameConfig.maxPullDistance, Math.sqrt(dx * dx + dy * dy));
+                    gameObjects.bird.x = gameObjects.sling.baseX + dist * Math.cos(angle);
+                    gameObjects.bird.y = gameObjects.sling.baseY + dist * Math.sin(angle);
+                }
+            },
+
+            onStopDragging: function() {
+                if (!gameConfig.gameStarted) return;
+                if (gameConfig.isDragging && gameObjects.sling.dragging) {
+                    const dx = gameObjects.sling.baseX - gameObjects.bird.x;
+                    const dy = gameObjects.sling.baseY - gameObjects.bird.y;
+                    gameObjects.bird.vx = dx * 0.3;
+                    gameObjects.bird.vy = dy * 0.3;
+                    gameObjects.bird.angle = Math.atan2(dy, dx);
+                    gameConfig.isFlying = true;
+                    gameConfig.isDragging = false;
+                    gameObjects.sling.dragging = false;
+                    gameConfig.shotsLeft--;
+                    gameObjects.sling.visible = false;
+                    gameFunctions.updateCounter();
+                }
+            },
+
+            onNextLevel: function() {
+                if (gameConfig.gameWon) {
+                    gameFunctions.resetGame();
+                }
+            }
+        };
+
+        // Módulo de renderizado
+        const gameRenderer = {
+            update: function() {
+                if (!gameConfig.gameStarted) {
+                    requestAnimationFrame(gameRenderer.update);
+                    return;
+                }
+
+                gameConfig.ctx.clearRect(0, 0, gameConfig.canvas.width, gameConfig.canvas.height);
+                if (gameConfig.isFlying) {
+                    gameObjects.bird.vx += gameObjects.bird.ax;
+                    gameObjects.bird.vy += gameObjects.bird.ay;
+                    gameObjects.bird.x += gameObjects.bird.vx;
+                    gameObjects.bird.y += gameObjects.bird.vy;
+                    gameObjects.bird.angle += gameObjects.bird.vx * 0.05;
+
+                    gameFunctions.createParticle(gameObjects.bird.x, gameObjects.bird.y);
+
+                    if (gameObjects.bird.y + gameObjects.bird.radius >= gameObjects.ground.y) {
+                        gameObjects.bird.y = gameObjects.ground.y - gameObjects.bird.radius;
+                        gameObjects.bird.vy *= -0.7;
+                        gameObjects.bird.vx *= 0.7;
+                        if (Math.abs(gameObjects.bird.vy) < 1) gameFunctions.resetBird();
+                    }
+
+                    if (gameObjects.bird.x + gameObjects.bird.radius >= gameConfig.canvas.width || gameObjects.bird.x - gameObjects.bird.radius <= 0) gameObjects.bird.vx *= -1;
+
+                    gameConfig.enemies.forEach((enemy, index) => {
+                        if (gameFunctions.collisionDetected(gameObjects.bird, enemy)) {
+                            if (gameConfig.isBossLevel && enemy.isBoss) {
+                                gameConfig.enemies[index].hits++;
+                                gameConfig.enemies[index].isTrembling = true;
+                                gameConfig.enemies[index].trembleStart = performance.now();
+                                
+                                // Rebote del pájaro al golpear al jefe
+                                let dx = gameObjects.bird.x - (enemy.x + enemy.width / 2);
+                                let dy = gameObjects.bird.y - (enemy.y + enemy.height / 2);
+                                let distance = Math.sqrt(dx * dx + dy * dy);
+                                dx /= distance;
+                                dy /= distance;
+                                let speed = Math.sqrt(gameObjects.bird.vx * gameObjects.bird.vx + gameObjects.bird.vy * gameObjects.bird.vy);
+                                gameObjects.bird.vx = dx * speed;
+                                gameObjects.bird.vy = dy * speed;
+                            } else {
+                                gameConfig.enemies[index].hit = true;
+                                // Calcular la dirección de rebote en función de la posición relativa del pájaro y el enemigo
+                                let dx = enemy.x + enemy.width / 2 - gameObjects.bird.x;
+                                let dy = enemy.y + enemy.height / 2 - gameObjects.bird.y;
+                                let distance = Math.sqrt(dx * dx + dy * dy);
+                                dx /= distance;
+                                dy /= distance;
+                                let speed = Math.sqrt(gameObjects.bird.vx * gameObjects.bird.vx + gameObjects.bird.vy * gameObjects.bird.vy);
+                                gameConfig.enemies[index].vx = dx * speed * 0.5;
+                                gameConfig.enemies[index].vy = dy * speed * 0.5;
+                                
+                                // Rebote del pájaro
+                                gameObjects.bird.vx = -dx * speed * 0.5;
+                                gameObjects.bird.vy = -dy * speed * 0.5;
+                            }
+                        }
+                    });
+
+                    gameFunctions.checkVictory();
+                }
+
+                if (gameConfig.shotsLeft <= 0 && !gameConfig.isFlying && gameConfig.enemies.length > 0) gameConfig.gameLost = true;
+
+                gameConfig.ctx.fillStyle = gameObjects.ground.color;
+                gameConfig.ctx.fillRect(gameObjects.ground.x, gameObjects.ground.y, gameObjects.ground.width, gameObjects.ground.height);
+
+                if (gameObjects.sling.visible) {
+                    gameConfig.ctx.beginPath();
+                    gameConfig.ctx.moveTo(gameObjects.sling.baseX - 5, gameObjects.sling.baseY);
+                    gameConfig.ctx.lineTo(gameObjects.bird.x, gameObjects.bird.y);
+                    gameConfig.ctx.moveTo(gameObjects.sling.baseX + 5, gameObjects.sling.baseY);
+                    gameConfig.ctx.lineTo(gameObjects.bird.x, gameObjects.bird.y);
+                    gameConfig.ctx.strokeStyle = "brown";
+                    gameConfig.ctx.lineWidth = 4;
+                    gameConfig.ctx.stroke();
+
+                    gameConfig.ctx.beginPath();
+                    gameConfig.ctx.moveTo(gameObjects.sling.baseX - 5, gameObjects.sling.baseY);
+                    gameConfig.ctx.lineTo(gameObjects.sling.baseX + 5, gameObjects.sling.baseY);
+                    gameConfig.ctx.strokeStyle = "brown";
+                    gameConfig.ctx.lineWidth = 6;
+                    gameConfig.ctx.stroke();
+                }
+
+                gameConfig.ctx.save();
+                gameConfig.ctx.translate(gameObjects.bird.x, gameObjects.bird.y);
+                gameConfig.ctx.rotate(gameObjects.bird.angle);
+                if (gameObjects.bird.visible) gameConfig.ctx.drawImage(gameImages.bird, -gameObjects.bird.radius, -gameObjects.bird.radius, gameObjects.bird.radius * 2, gameObjects.bird.radius * 2);
+                gameConfig.ctx.restore();
+
+                gameConfig.enemies.forEach((enemy, index) => {
+                    if (enemy.isBoss && enemy.isTrembling) {
+                        const elapsed = performance.now() - enemy.trembleStart;
+                        if (elapsed < 500) enemy.x += Math.sin(elapsed / 50) * 5;
+                        else enemy.isTrembling = false;
+                    }
+
+                    let enemyImg;
+                    if (enemy.isBoss) enemyImg = gameConfig.level === 16 ? gameImages.specialBoss : gameImages.boss;
+                    else enemyImg = gameConfig.level > 8 ? gameImages.triangle :
+ gameImages.enemy;
+
+                    if (enemy.moving) {
+                        if (enemy.diagonal) {
+                            enemy.x += enemy.directionX * enemy.speed;
+                            enemy.y += enemy.directionY * enemy.speed;
+                            if (enemy.x <= 200 || enemy.x + enemy.width >= gameConfig.canvas.width) enemy.directionX *= -1;
+                            if (enemy.y <= 0 || enemy.y + enemy.height >= gameObjects.ground.y) enemy.directionY *= -1;
+                        } else {
+                            enemy.x += enemy.directionX * enemy.speed;
+                            if (enemy.x <= 200 || enemy.x + enemy.width >= gameConfig.canvas.width) enemy.directionX *= -1;
+                        }
+                    }
+
+                    if (enemy.hit) {
+                        enemy.vy += 0.5;
+                        enemy.x += enemy.vx;
+                        enemy.y += enemy.vy;
+                        enemy.angle += 0.1;
+
+                        if (enemy.y + enemy.height >= gameObjects.ground.y) {
+                            enemy.y = gameObjects.ground.y - enemy.height;
+                            enemy.vy *= -0.6;
+                            enemy.vx *= 0.8;
+                            enemy.groundTime++;
+
+                            if (enemy.groundTime > 60) {
+                                enemy.deleteTimer++;
+                                enemy.scale = Math.max(0, 1 - enemy.deleteTimer / 60);
+                                if (enemy.deleteTimer >= 60) {
+                                    gameConfig.enemies.splice(index, 1);
+                                    return;
+                                }
+                            }
+                        }
+                    }
+
+                    gameConfig.ctx.save();
+                    gameConfig.ctx.translate(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2);
+                    gameConfig.ctx.rotate(enemy.angle);
+                    gameConfig.ctx.scale(enemy.scale, enemy.scale);
+                    gameConfig.ctx.drawImage(enemyImg, -enemy.width / 2, -enemy.height / 2, enemy.width, enemy.height);
+                    gameConfig.ctx.restore();
+
+                    if (enemy.isBoss) {
+                        const healthBarWidth = 150;
+                        const healthBarHeight = 10;
+                        const healthPercentage = 1 - (enemy.hits / gameConfig.bossHitsToWin);
+                        gameConfig.ctx.fillStyle = 'red';
+                        gameConfig.ctx.fillRect(enemy.x, enemy.y - 20, healthBarWidth, healthBarHeight);
+                        gameConfig.ctx.fillStyle = 'green';
+                        gameConfig.ctx.fillRect(enemy.x, enemy.y - 20, healthBarWidth * healthPercentage, healthBarHeight);
+                    }
+                });
+
+                // Actualizar y dibujar partículas
+                gameConfig.particles.forEach((particle, index) => {
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    particle.life--;
+
+                    if (particle.life <= 0) {
+                        gameConfig.particles.splice(index, 1);
+                        return;
+                    }
+
+                    gameConfig.ctx.beginPath();
+                    gameConfig.ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+                    gameConfig.ctx.fillStyle = particle.color;
+                    gameConfig.ctx.fill();
+                });
+
+                if (gameConfig.gameWon) {
+                    gameConfig.ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+                    gameConfig.ctx.fillRect(0, 0, gameConfig.canvas.width, gameConfig.canvas.height);
+                    gameConfig.ctx.fillStyle = "white";
+                    gameConfig.ctx.font = "48px Arial";
+                    gameConfig.ctx.textAlign = "center";
+                    gameConfig.ctx.fillText("¡Victoria!", gameConfig.canvas.width / 2, gameConfig.canvas.height / 2);
+                    gameConfig.ctx.font = "24px Arial";
+                    gameConfig.ctx.fillText("Haz clic para continuar", gameConfig.canvas.width / 2, gameConfig.canvas.height / 2 + 50);
+                }
+
+                if (gameConfig.gameLost) {
+                    gameConfig.ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+                    gameConfig.ctx.fillRect(0, 0, gameConfig.canvas.width, gameConfig.canvas.height);
+                    gameConfig.ctx.fillStyle = "white";
+                    gameConfig.ctx.font = "48px Arial";
+                    gameConfig.ctx.textAlign = "center";
+                    gameConfig.ctx.fillText("Juego terminado", gameConfig.canvas.width / 2, gameConfig.canvas.height / 2);
+                    gameConfig.ctx.font = "24px Arial";
+                    gameConfig.ctx.fillText("Haz clic para reiniciar", gameConfig.canvas.width / 2, gameConfig.canvas.height / 2 + 50);
+                }
+
+                requestAnimationFrame(gameRenderer.update);
+            }
+        };
+
+        // Inicialización del juego
+        function initGame() {
+            gameConfig.ctx = gameConfig.canvas.getContext("2d");
+            gameImages.loadImages();
+            gameObjects.ground.color = "#8B4513";
+            gameFunctions.setBackground();
+            gameFunctions.updateCounter();
+
+            gameConfig.canvas.addEventListener("mousedown", function(e) {
+                const rect = gameConfig.canvas.getBoundingClientRect();
+                const scaleX = gameConfig.canvas.width / rect.width;
+                const scaleY = gameConfig.canvas.height / rect.height;
+                const offsetX = (e.clientX - rect.left) * scaleX;
+                const offsetY = (e.clientY - rect.top) * scaleY;
+                
+                if (!gameConfig.gameStarted) {
+                    gameFunctions.startGame();
+                } else if (gameConfig.gameWon || gameConfig.gameLost) {
+                    gameFunctions.resetGame();
+                } else {
+                    gameEvents.onStartDragging(offsetX, offsetY);
+                }
+            });
+
+            gameConfig.canvas.addEventListener("mousemove", function(e) {
+                const rect = gameConfig.canvas.getBoundingClientRect();
+                const scaleX = gameConfig.canvas.width / rect.width;
+                const scaleY = gameConfig.canvas.height / rect.height;
+                const offsetX = (e.clientX - rect.left) * scaleX;
+                const offsetY = (e.clientY - rect.top) * scaleY;
+                gameEvents.onDragging(offsetX, offsetY);
+            });
+
+            gameConfig.canvas.addEventListener("mouseup", gameEvents.onStopDragging);
+            gameConfig.canvas.addEventListener("mouseleave", gameEvents.onStopDragging);
+
+            gameConfig.canvas.addEventListener("touchstart", function(e) {
+                e.preventDefault();
+                const rect = gameConfig.canvas.getBoundingClientRect();
+                const scaleX = gameConfig.canvas.width / rect.width;
+                const scaleY = gameConfig.canvas.height / rect.height;
+                const touch = e.touches[0];
+                const offsetX = (touch.clientX - rect.left) * scaleX;
+                const offsetY = (touch.clientY - rect.top) * scaleY;
+                
+                if (!gameConfig.gameStarted) {
+                    gameFunctions.startGame();
+                } else if (gameConfig.gameWon || gameConfig.gameLost) {
+                    gameFunctions.resetGame();
+                } else {
+                    gameEvents.onStartDragging(offsetX, offsetY);
+                }
+            });
+
+            gameConfig.canvas.addEventListener("touchmove", function(e) {
+                e.preventDefault();
+                const rect = gameConfig.canvas.getBoundingClientRect();
+                const scaleX = gameConfig.canvas.width / rect.width;
+                const scaleY = gameConfig.canvas.height / rect.height;
+                const touch = e.touches[0];
+                const offsetX = (touch.clientX - rect.left) * scaleX;
+                const offsetY = (touch.clientY - rect.top) * scaleY;
+                gameEvents.onDragging(offsetX, offsetY);
+            });
+
+            gameConfig.canvas.addEventListener("touchend", gameEvents.onStopDragging);
+            gameConfig.canvas.addEventListener("touchcancel", gameEvents.onStopDragging);
+
+            document.getElementById("startMenu").addEventListener("click", function() {
+                gameFunctions.startGame();
+            });
+
+            document.getElementById("donateButton").addEventListener("click", function(e) {
+                e.stopPropagation();
+                document.getElementById("donationOptions").style.display = "block";
+            });
+
+            document.getElementById("closeButton").addEventListener("click", function() {
+                document.getElementById("donationOptions").style.display = "none";
+            });
+
+            document.getElementById("debugButton").addEventListener("click", function() {
+                gameFunctions.passLevelManually();
+            });
+
+            gameRenderer.update();
+        }
+
+        window.onload = initGame;
+    </script>
+</body>
+</html>
